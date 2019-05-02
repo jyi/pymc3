@@ -15,7 +15,6 @@ __all__ = ['Metropolis', 'DEMetropolis', 'BinaryMetropolis', 'BinaryGibbsMetropo
 
 # Available proposal distributions for Metropolis
 
-
 class Proposal:
     def __init__(self, s):
         self.s = s
@@ -98,7 +97,9 @@ class Metropolis(ArrayStepShared):
     }]
 
     def __init__(self, vars=None, S=None, proposal_dist=None, scaling=1.,
-                 tune=True, tune_interval=100, model=None, mode=None, **kwargs):
+                 tune=True, tune_interval=100, model=None, mode=None,
+                 accept_fun=None, random_walk=False,
+                 **kwargs):
 
         model = pm.modelcontext(model)
 
@@ -123,6 +124,7 @@ class Metropolis(ArrayStepShared):
         self.tune_interval = tune_interval
         self.steps_until_tune = tune_interval
         self.accepted = 0
+        self.random_walk = random_walk
 
         # Determine type of variables
         self.discrete = np.concatenate(
@@ -133,7 +135,10 @@ class Metropolis(ArrayStepShared):
         self.mode = mode
 
         shared = pm.make_shared_replacements(vars, model)
-        self.delta_logp = delta_logp(model.logpt, vars, shared)
+        if accept_fun is None:
+            self.delta_logp = delta_logp(model.logpt, vars, shared)
+        else:
+            self.delta_logp = accept_fun
         super().__init__(vars, shared)
 
     def astep(self, q0):
@@ -145,7 +150,10 @@ class Metropolis(ArrayStepShared):
             self.steps_until_tune = self.tune_interval
             self.accepted = 0
 
-        delta = self.proposal_dist() * self.scaling
+        if not self.random_walk:
+            delta = self.proposal_dist() * self.scaling
+        else:
+            delta = self.proposal_dist(q0) * self.scaling
 
         if self.any_discrete:
             if self.all_discrete:
@@ -618,7 +626,6 @@ def sample_except(limit, excluded):
 def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / np.sum(e_x, axis = 0)
-
 
 def delta_logp(logp, vars, shared):
     [logp0], inarray0 = pm.join_nonshared_inputs([logp], vars, shared)
