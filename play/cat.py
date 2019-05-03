@@ -6,7 +6,9 @@ bits = 2
 max_num = np.power(2, bits)-1
 start = {'p': [0,1] }   # represents 00 and 01
 
-# construct a markov chain
+"""
+Construct a markov chain
+"""
 mc = np.array([[0.31, 0.3,  0.3,  0.09],
                [0.3,  0.31, 0.09, 0.3],
                [0.3,  0.09, 0.31, 0.3],
@@ -16,13 +18,16 @@ def accept_fun(q, q0):
     return 0.5
 
 class CustomProposal:
-
-    # s is a markov chain
+    """
+    s: markov chain
+    """
     def __init__(self, s):
         self.mc = s
 
-    # q0: the current value
-    # return: proposed value
+    """
+    q0: the current value
+    return: proposed value
+    """
     def __call__(self, q0):
         def propose(q0_i):
             q_i = np.random.choice(max_num+1, p=self.mc[q0_i])
@@ -37,7 +42,6 @@ class CustomProposal:
 # import pdb; pdb.set_trace() # TODO: remove
 with pm.Model() as model:
     p = pm.DiscreteUniform('p', 0, max_num, shape=2)
-    # s = pm.Categorical('s', p=p, shape=K)
     trace = pm.sample(2000, cores=1, chains=1,
                       start=start,
                       step=pm.Metropolis(accept_fun=accept_fun,
