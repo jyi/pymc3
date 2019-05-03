@@ -1,42 +1,48 @@
-import sys
-sys.path = ["/Users/jlee/workspace/angelix/build/pymc3/"] + sys.path
-
 import numpy as np
 import numpy.random as nr
 import pymc3 as pm
 
 bits = 2
 max_num = np.power(2, bits)-1
-start = {'p': 1} # represents 01
+start = {'p': [0,1] }   # represents 00 and 01
 
-# markov chain
-mc = 
+# construct a markov chain
+mc = np.array([[0.31, 0.3,  0.3,  0.09],
+               [0.3,  0.31, 0.09, 0.3],
+               [0.3,  0.09, 0.31, 0.3],
+               [0.09, 0.3,  0.3,  0.31]])
 
 def accept_fun(q, q0):
     return 0.5
 
 class CustomProposal:
+
+    # s is a markov chain
     def __init__(self, s):
-        self.s = s
-        
+        self.mc = s
+
+    # q0: the current value
+    # return: proposed value
     def __call__(self, q0):
+        def propose(q0_i):
+            q_i = np.random.choice(max_num+1, p=self.mc[q0_i])
+            return q_i
+
         q0 = q0.astype('int64')
-        q = np.random.choice(np.arange(max_num+1),
-                             1, p=[0.2, 0.5, 0.2, 0.1])
-        import pdb; pdb.set_trace() # TODO: remove        
+        q = list(map(propose, q0))
         return q
 
-def proposal_dist(S):
-    return nr.normal(scale=S)
+###################################################################
 
+# import pdb; pdb.set_trace() # TODO: remove
 with pm.Model() as model:
-    p = pm.DiscreteUniform('p', 0, max_num)
+    p = pm.DiscreteUniform('p', 0, max_num, shape=2)
     # s = pm.Categorical('s', p=p, shape=K)
     trace = pm.sample(2000, cores=1, chains=1,
                       start=start,
                       step=pm.Metropolis(accept_fun=accept_fun,
                                          S=mc,
                                          proposal_dist=CustomProposal,
-                                         random_walk=True))
+                                         random_walk_mc=True))
 
 print(pm.summary(trace));

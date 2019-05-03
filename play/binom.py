@@ -1,7 +1,3 @@
-import sys
-sys.path = ["/Users/jlee/workspace/angelix/build/pymc3/"] + sys.path
-
-# import pdb; pdb.set_trace()                                                                                                                                                 
 import pymc3 as pm
 
 h = 61
@@ -12,5 +8,3 @@ with pm.Model():
     trace = pm.sample(5000, cores=1, chains=1, step=pm.Metropolis())
 
 print(pm.summary(trace));
-
-

@@ -98,7 +98,7 @@ class Metropolis(ArrayStepShared):
 
     def __init__(self, vars=None, S=None, proposal_dist=None, scaling=1.,
                  tune=True, tune_interval=100, model=None, mode=None,
-                 accept_fun=None, random_walk=False,
+                 accept_fun=None, random_walk_mc=False,
                  **kwargs):
 
         model = pm.modelcontext(model)
@@ -124,7 +124,7 @@ class Metropolis(ArrayStepShared):
         self.tune_interval = tune_interval
         self.steps_until_tune = tune_interval
         self.accepted = 0
-        self.random_walk = random_walk
+        self.random_walk_mc = random_walk_mc
 
         # Determine type of variables
         self.discrete = np.concatenate(
@@ -142,6 +142,25 @@ class Metropolis(ArrayStepShared):
         super().__init__(vars, shared)
 
     def astep(self, q0):
+        def propose(q0):
+            # import pdb; pdb.set_trace() # TODO: remove
+            if self.random_walk_mc:
+                q = self.proposal_dist(q0)
+            else:
+                delta = self.proposal_dist() * self.scaling
+                if self.any_discrete:
+                    if self.all_discrete:
+                        delta = np.round(delta, 0).astype('int64')
+                        q0 = q0.astype('int64')
+                        q = (q0 + delta).astype('int64')
+                    else:
+                        delta[self.discrete] = np.round(
+                            delta[self.discrete], 0)
+                        q = (q0 + delta)
+                else:
+                    q = floatX(q0 + delta)
+            return (q0, q)
+
         if not self.steps_until_tune and self.tune:
             # Tune scaling parameter
             self.scaling = tune(
@@ -150,23 +169,7 @@ class Metropolis(ArrayStepShared):
             self.steps_until_tune = self.tune_interval
             self.accepted = 0
 
-        if not self.random_walk:
-            delta = self.proposal_dist() * self.scaling
-        else:
-            delta = self.proposal_dist(q0) * self.scaling
-
-        if self.any_discrete:
-            if self.all_discrete:
-                delta = np.round(delta, 0).astype('int64')
-                q0 = q0.astype('int64')
-                q = (q0 + delta).astype('int64')
-            else:
-                delta[self.discrete] = np.round(
-                    delta[self.discrete], 0)
-                q = (q0 + delta)
-        else:
-            q = floatX(q0 + delta)
-
+        q0, q = propose(q0)
         accept = self.delta_logp(q, q0)
         q_new, accepted = metrop_select(accept, q, q0)
         self.accepted += accepted
