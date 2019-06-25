@@ -111,7 +111,10 @@ class Metropolis(ArrayStepShared):
             S = np.ones(sum(v.dsize for v in vars))
 
         if proposal_dist is not None:
-            self.proposal_dist = proposal_dist(S)
+            if 'args_of_proposal_dist' in kwargs:
+                self.proposal_dist = proposal_dist(kwargs['args_of_proposal_dist'])
+            else:
+                self.proposal_dist = proposal_dist(S)
         elif S.ndim == 1:
             self.proposal_dist = NormalProposal(S)
         elif S.ndim == 2:
