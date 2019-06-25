@@ -26,7 +26,8 @@ sys.setrecursionlimit(10000)
 
 __all__ = ['sample', 'iter_sample', 'sample_posterior_predictive',
            'sample_posterior_predictive_w', 'init_nuts',
-           'sample_prior_predictive', 'sample_ppc', 'sample_ppc_w']
+           'sample_prior_predictive', 'sample_ppc', 'sample_ppc_w',
+           'StopSampling']
 
 STEP_METHODS = (NUTS, HamiltonianMC, Metropolis, BinaryMetropolis,
                 BinaryGibbsMetropolis, Slice, CategoricalGibbsMetropolis)
@@ -275,7 +276,7 @@ def sample(draws=500, step=None, init='auto', n_init=200000, start=None, trace=N
     Notes
     -----
 
-    Optional keyword arguments can be passed to `sample` to be delivered to the 
+    Optional keyword arguments can be passed to `sample` to be delivered to the
     `step_method`s used during sampling. In particular, the NUTS step method accepts
     a number of arguments. Common options are:
 
@@ -542,6 +543,8 @@ def _sample(chain, progressbar, random_seed, start, draws=None, step=None,
                 trace = MultiTrace([strace])
     except KeyboardInterrupt:
         pass
+    except StopSampling:
+        raise
     finally:
         if progressbar:
             sampling.close()
@@ -641,7 +644,7 @@ def _iter_sample(draws, step, start=None, trace=None, chain=0, tune=None,
             warns = step.warnings()
             strace._add_warnings(warns)
         raise
-    except BaseException:
+    except BaseException as be:
         strace.close()
         raise
     else:
@@ -650,6 +653,8 @@ def _iter_sample(draws, step, start=None, trace=None, chain=0, tune=None,
             warns = step.warnings()
             strace._add_warnings(warns)
 
+class StopSampling(Exception):
+    pass
 
 class PopulationStepper:
     def __init__(self, steppers, parallelize):
