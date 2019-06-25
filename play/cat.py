@@ -4,7 +4,7 @@ import pymc3 as pm
 
 bits = 2
 max_num = np.power(2, bits)-1
-start = {'p': [0,1] }   # represents 00 and 01
+start = {'p': [0,1] }   # represents 00 and 01 (note that bit = 2)
 
 """
 Construct a markov chain
@@ -42,10 +42,17 @@ class CustomProposal:
 # import pdb; pdb.set_trace() # TODO: remove
 with pm.Model() as model:
     p = pm.DiscreteUniform('p', 0, max_num, shape=2)
+
+    pm.Metropolis(accept_fun=accept_fun,
+                  S=mc,
+                  proposal_dist=CustomProposal,
+                  random_walk_mc=True)
+
     trace = pm.sample(2000, cores=1, chains=1,
                       start=start,
                       step=pm.Metropolis(accept_fun=accept_fun,
                                          S=mc,
+                                         # mc is passed to CustomProposal
                                          proposal_dist=CustomProposal,
                                          random_walk_mc=True))
 
