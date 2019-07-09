@@ -147,7 +147,7 @@ class Metropolis(ArrayStepShared):
     def astep(self, q0):
         def propose(q0):
             if self.random_walk_mc:
-                q = self.proposal_dist(q0)
+                q0, q = self.proposal_dist(q0)
             else:
                 delta = self.proposal_dist() * self.scaling
                 if self.any_discrete:
