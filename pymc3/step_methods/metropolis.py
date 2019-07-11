@@ -3,6 +3,7 @@ import numpy.random as nr
 import theano
 import scipy.linalg
 import warnings
+import logging
 
 from ..distributions import draw_values
 from .arraystep import ArrayStepShared, PopulationArrayStepShared, ArrayStep, metrop_select, Competence
@@ -13,7 +14,10 @@ __all__ = ['Metropolis', 'DEMetropolis', 'BinaryMetropolis', 'BinaryGibbsMetropo
            'CategoricalGibbsMetropolis', 'NormalProposal', 'CauchyProposal',
            'LaplaceProposal', 'PoissonProposal', 'MultivariateNormalProposal']
 
+_log = logging.getLogger('pymc3')
+
 # Available proposal distributions for Metropolis
+
 
 class Proposal:
     def __init__(self, s):
@@ -175,6 +179,7 @@ class Metropolis(ArrayStepShared):
         accept = self.delta_logp(q, q0)
         q_new, accepted = metrop_select(accept, q, q0)
         self.accepted += accepted
+        _log.info('accepted: {}'.format(accepted))
 
         self.steps_until_tune -= 1
 
