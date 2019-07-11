@@ -309,6 +309,14 @@ def sample(draws=500, step=None, init='auto', n_init=200000, start=None, trace=N
                mean        sd  mc_error   hpd_2.5  hpd_97.5
         p  0.604625  0.047086   0.00078  0.510498  0.694774
     """
+    # update logger
+    if 'logger' in kwargs:
+        for handler in _log.handlers:
+            _log.removeHandler(handler)
+        for handler in kwargs['logger'].handlers:
+            _log.addHandler(handler)
+        kwargs.pop('logger', None)
+
     model = modelcontext(model)
 
     nuts_kwargs = kwargs.pop('nuts_kwargs', None)
