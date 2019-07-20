@@ -102,7 +102,7 @@ class Metropolis(ArrayStepShared):
 
     def __init__(self, vars=None, S=None, proposal_dist=None, scaling=1.,
                  tune=True, tune_interval=100, model=None, mode=None,
-                 accept_fun=None, random_walk_mc=False,
+                 accept_fun=None, post_accept_fun=None, random_walk_mc=False,
                  **kwargs):
 
         model = pm.modelcontext(model)
@@ -132,6 +132,7 @@ class Metropolis(ArrayStepShared):
         self.steps_until_tune = tune_interval
         self.accepted = 0
         self.random_walk_mc = random_walk_mc
+        self.post_accept_fun = post_accept_fun
 
         # Determine type of variables
         self.discrete = np.concatenate(
@@ -180,6 +181,8 @@ class Metropolis(ArrayStepShared):
         q_new, accepted = metrop_select(accept, q, q0)
         self.accepted += accepted
         _log.info('accepted: {}'.format(accepted))
+        if self.post_accept_fun is not None:
+            self.post_accept_fun(accepted)
 
         self.steps_until_tune -= 1
 
