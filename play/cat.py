@@ -14,8 +14,10 @@ mc = np.array([[0.31, 0.3,  0.3,  0.09],
                [0.3,  0.09, 0.31, 0.3],
                [0.09, 0.3,  0.3,  0.31]])
 
+
 def accept_fun(q, q0):
     return 0.5
+
 
 class CustomProposal:
     """
