@@ -100,6 +100,9 @@ class SMC:
         tune_steps=True,
         threshold=0.5,
         parallel=True,
+        S=None, accept_fun=None, proposal_dist=None, random_walk_mc=False,
+        post_accept_fun=None,
+        **kwargs
     ):
 
         self.n_steps = n_steps
