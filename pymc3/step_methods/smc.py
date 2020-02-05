@@ -18,7 +18,7 @@ __all__ = ["SMC", "sample_smc"]
 
 
 class SMC:
-    R"""
+    """
     Sequential Monte Carlo step
 
     Parameters
@@ -100,7 +100,8 @@ class SMC:
         tune_steps=True,
         threshold=0.5,
         parallel=True,
-        S=None, accept_fun=None, proposal_dist=None, random_walk_mc=False,
+        S=None, likelihood_logp=None,
+        accept_fun=None, proposal_dist=None, random_walk_mc=False,
         post_accept_fun=None,
         **kwargs
     ):
@@ -113,6 +114,7 @@ class SMC:
         self.tune_steps = tune_steps
         self.threshold = threshold
         self.parallel = parallel
+        self.likelihood_logp = likelihood_logp
 
 
 def sample_smc(draws=5000, step=None, cores=None, progressbar=False, model=None, random_seed=-1):
@@ -152,7 +154,11 @@ def sample_smc(draws=5000, step=None, cores=None, progressbar=False, model=None,
     all_discrete = discrete.all()
     shared = make_shared_replacements(variables, model)
     prior_logp = logp_forw([model.varlogpt], variables, shared)
-    likelihood_logp = logp_forw([model.datalogpt], variables, shared)
+
+    if step.likelihood_logp is None:
+        likelihood_logp = logp_forw([model.datalogpt], variables, shared)
+    else:
+        likelihood_logp = step.likelihood_logp
 
     pm._log.info("Sample initial stage: ...")
     posterior, var_info = _initial_population(draws, model, variables)
