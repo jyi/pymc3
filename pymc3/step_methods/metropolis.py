@@ -176,11 +176,12 @@ class Metropolis(ArrayStepShared):
             self.steps_until_tune = self.tune_interval
             self.accepted = 0
 
-        q0, q = propose(q0)        
-        accept = self.delta_logp(q, q0) # acceptance ratio
+        q0, q = propose(q0)
+        accept = self.delta_logp(q, q0)  # acceptance ratio
         q_new, accepted = metrop_select(accept, q, q0)
         self.accepted += accepted
         _log.info('accepted: {}'.format(accepted))
+        _log.debug('q_new: {}'.format(q_new))
         if self.post_accept_fun is not None:
             self.post_accept_fun(accepted)
 
