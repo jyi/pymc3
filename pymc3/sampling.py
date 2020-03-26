@@ -189,7 +189,7 @@ def _cpu_count():
 
 def sample(draws=500, step=None, init='auto', n_init=200000, start=None, trace=None, chain_idx=0,
            chains=None, cores=None, tune=500, progressbar=True,
-           model=None, random_seed=None, discard_tuned_samples=True,
+           model=None, random_seed=None, discard_tuned_samples=True, allow_empty_model=False,
            compute_convergence_checks=True, **kwargs):
     """Draw samples from the posterior using the given step methods.
 
@@ -388,7 +388,7 @@ def sample(draws=500, step=None, init='auto', n_init=200000, start=None, trace=N
 
         draws += tune
 
-        if model.ndim == 0:
+        if model.ndim == 0 and not allow_empty_model:
             raise ValueError('The model does not contain any free variables.')
 
         if step is None and init is not None and all_continuous(model.vars):
